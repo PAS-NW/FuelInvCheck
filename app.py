@@ -1214,9 +1214,9 @@ if results is not None:
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
-        st.markdown(f'<div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M8 7V3h8l4 4v14H6V7z"/><path d="M16 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="M4 7h2v14h12"/></svg></div><div><div class="kpi-label">Total transactions</div><div class="kpi-value">{total}</div><div class="kpi-sub">Detected records</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card"><div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M8 7V3h8l4 4v14H6V7z"/><path d="M16 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="M4 7h2v14h12"/></svg></div><div><div class="kpi-label">Total transactions</div><div class="kpi-value">{total}</div><div class="kpi-sub">Detected transactions</div></div></div>', unsafe_allow_html=True)
     with c2:
-        st.markdown(f'<div class="kpi-card kpi-matched"><div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.5 9"/></svg></div><div><div class="kpi-label">Matched transactions</div><div class="kpi-value">{matched}</div><div class="kpi-sub">Approved candidates</div></div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="kpi-card kpi-matched"><div class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.5 9"/></svg></div><div><div class="kpi-label">Matched transactions</div><div class="kpi-value">{matched}</div><div class="kpi-sub">Approved transactions</div></div></div>', unsafe_allow_html=True)
     with c3:
         st.markdown(f'<div class="kpi-card kpi-unmatched"><div class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><path d="M12 18h.01"/></svg></div><div><div class="kpi-label">Unmatched transactions</div><div class="kpi-value">{unmatched}</div><div class="kpi-sub">Need review</div></div></div>', unsafe_allow_html=True)
     with c4:

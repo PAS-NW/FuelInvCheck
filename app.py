@@ -23,7 +23,7 @@ PAS_BLACK = "#0A0A0A"
 PAS_DARK = "#171717"
 PAS_GREY = "#F4F4F4"
 
-st.set_page_config(page_title="PAS Plant Invoice Matching", page_icon="pas_logo.png", layout="wide")
+st.set_page_config(page_title="PAS Fuel Invoice Matching", page_icon="pas_logo.png", layout="wide")
 
 st.markdown(
     f"""
@@ -532,15 +532,15 @@ with st.sidebar:
     st.image("pas_logo.png", use_column_width=True)
     st.markdown(
         """
-        <div class="pas-sidebar-title">PAS Plant<br>Invoice Matching</div>
+        <div class="pas-sidebar-title">PAS Fuel<br>Invoice Matching</div>
         <div class="pas-yellow-line"></div>
-        <div class="pas-sidebar-copy">Upload the Plant workbook and invoice PDFs/ZIP, then export a clean reconciliation workbook.</div>
+        <div class="pas-sidebar-copy">Upload the Vehicle spreadsheet and fuel invoice PDF, then export annotated PDF.</div>
         <div class="pas-sidebar-rule"></div>
         <div class="pas-sidebar-heading">Instructions</div>
-        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 15.3"/></svg></span><span>Upload Hire Order<br>Spreadsheet</span></div>
-        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></span><span>Upload ZIP of all invoices<br>to be checked</span></div>
+        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 15.3"/></svg></span><span>Upload Vehicle Spreadsheet</span></div>
+        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></span><span>Upload Fuel Invoice PDF</span></div>
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg></span><span>Run Reconciliation</span></div>
-        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span>Download Reconciliation<br>Spreadsheet</span></div>
+        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span>Download Reconciliation<br>PDF</span></div>
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg></span><span>Smoke Crack</span></div>
         <div class="pas-sidebar-rule"></div>
         <div class="pas-sidebar-footer">PAS NW Ltd • v1.0 Prototype Build</div>

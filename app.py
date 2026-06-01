@@ -1225,21 +1225,13 @@ if results is not None:
     st.markdown('<div class="pas-results-title">Results</div>', unsafe_allow_html=True)
     render_results_table(all_df)
 
-    dl_left, dl_mid, dl_right = st.columns([1.3, 1, 1])
+    dl_left, dl_mid, dl_right = st.columns([1.3, 1, 1.3])
     with dl_mid:
         st.download_button(
             "⬇  Download annotated PDF",
             data=results["annotated_pdf_bytes"],
             file_name=results["pdf_filename"],
             mime="application/pdf",
-            use_container_width=True,
-        )
-    with dl_right:
-        st.download_button(
-            "⬇  Download Excel reconciliation",
-            data=results["excel_bytes"],
-            file_name=results["excel_filename"],
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
         )
 else:

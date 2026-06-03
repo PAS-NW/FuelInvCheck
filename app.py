@@ -543,7 +543,7 @@ with st.sidebar:
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span>Download Reconciliation<br>PDF</span></div>
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg></span><span>Smoke Crack</span></div>
         <div class="pas-sidebar-rule"></div>
-        <div class="pas-sidebar-footer">PAS NW Ltd • v1.0 Prototype Build</div>
+        <div class="pas-sidebar-footer">PAS NW Ltd • v1.0.1 Weekend Date Fix</div>
         """,
         unsafe_allow_html=True,
     )
@@ -552,7 +552,7 @@ st.markdown(
     """
     <div class="pas-hero">
       <div class="pas-hero-logo">PAS</div>
-      <div class="pas-hero-text">PAS NW Ltd<span class="pas-hero-dot">•</span><span class="pas-hero-version">v1.0 Prototype Build</span></div>
+      <div class="pas-hero-text">PAS NW Ltd<span class="pas-hero-dot">•</span><span class="pas-hero-version">v1.0.1 Weekend Date Fix</span></div>
     </div>
     """,
     unsafe_allow_html=True,
@@ -812,7 +812,7 @@ def extract_fuel_transactions_from_text(pages: List[str]) -> List[Dict[str, str]
     vehicle registration, odometer, product, quantity and net value.
     """
     transactions = []
-    date_token = r"\d{1,2}[-/][A-Za-z]{3}[-/]\d{2,4}|\d{1,2}[-/]\d{1,2}[-/]\d{2,4}"
+    date_token = r"\d{1,2}[-/][A-Za-z]{3}[-/]\d{2,4}\*?|\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\*?"
     time_token = r"\d{1,2}:\d{2}"
     reg_token = r"[A-Z]{1,3}\d{1,3}[A-Z]{0,3}|[A-Z]{2}\d{2}[A-Z]{3}"
     product_token = r"Diesel|Unleaded(?:\s+Medium(?:\s+Octane)?)?|Petrol|AdBlue"
@@ -1017,7 +1017,7 @@ def make_annotated_pdf(original_pdf_bytes: bytes, reconciliation_df: pd.DataFram
 
     try:
         doc = fitz.open(stream=original_pdf_bytes, filetype="pdf")
-        date_re = re.compile(r"^\d{1,2}[-/][A-Za-z]{3}[-/]\d{2,4}$|^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$", re.I)
+        date_re = re.compile(r"^\d{1,2}[-/][A-Za-z]{3}[-/]\d{2,4}\*?$|^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\*?$", re.I)
         time_re = re.compile(r"^\d{1,2}:\d{2}$")
         card_re = re.compile(r"^\d{5,20}$")
         margin_width = 155

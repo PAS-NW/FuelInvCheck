@@ -534,13 +534,13 @@ with st.sidebar:
         """
         <div class="pas-sidebar-title">PAS Fuel<br>Invoice Matching</div>
         <div class="pas-yellow-line"></div>
-        <div class="pas-sidebar-copy">Upload the Vehicle spreadsheet and fuel invoice PDF, then export annotated PDF.</div>
+        <div class="pas-sidebar-copy">Upload the Vehicle spreadsheet and fuel invoice PDF, then export annotated PDF and Excel summary.</div>
         <div class="pas-sidebar-rule"></div>
         <div class="pas-sidebar-heading">Instructions</div>
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M16 16l-4-4-4 4"/><path d="M12 12v9"/><path d="M20 16.6A5 5 0 0 0 18 7h-1.3A8 8 0 1 0 4 15.3"/></svg></span><span>Upload Vehicle Spreadsheet</span></div>
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6"/><path d="M9 17h6"/></svg></span><span>Upload Fuel Invoice PDF</span></div>
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M5 3l14 9-14 9V3z"/></svg></span><span>Run Reconciliation</span></div>
-        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span>Download Reconciliation<br>PDF</span></div>
+        <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></span><span>Download Reconciliation<br>PDF & Excel</span></div>
         <div class="pas-nav-row"><span class="pas-nav-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg></span><span>Smoke Crack</span></div>
         <div class="pas-sidebar-rule"></div>
         <div class="pas-sidebar-footer">PAS NW Ltd • v1.0.1 Weekend Date Fix</div>
@@ -648,6 +648,8 @@ FUEL_EXCEL_COLUMNS = [
     "Fuel Quantity",
     "Fuel Value",
     "Status",
+    "Page",
+    "Transaction Detail",
 ]
 
 
@@ -988,14 +990,48 @@ def style_excel(writer, dfs: Dict[str, pd.DataFrame]):
             ws.column_dimensions[get_column_letter(idx)].width = width
 
 
-def make_fuel_excel(summary_df: pd.DataFrame, reconciliation_df: pd.DataFrame) -> bytes:
+def make_job_cost_summary(reconciliation_df: pd.DataFrame) -> pd.DataFrame:
+    """Build the Excel summary tab: total fuel cost by job number/site."""
+    if reconciliation_df is None or reconciliation_df.empty:
+        return pd.DataFrame(columns=["Job Number / Site", "Total Fuel Cost", "Transaction Count", "Driver Names"])
+
+    df = reconciliation_df.copy()
+    df["Job Number / Site"] = df.get("Job Number / Site", "").apply(clean_cell)
+    df["Job Number / Site"] = df["Job Number / Site"].replace("", "Unmatched / No Job Number")
+    df["Fuel Value Numeric"] = df.get("Fuel Value", "").apply(lambda v: money_to_float(v) or 0.0)
+
+    summary = (
+        df.groupby("Job Number / Site", dropna=False)
+        .agg(
+            **{
+                "Total Fuel Cost": ("Fuel Value Numeric", "sum"),
+                "Transaction Count": ("Fuel Value Numeric", "size"),
+                "Driver Names": ("Driver Name", lambda s: ", ".join(sorted({clean_cell(v) for v in s if clean_cell(v)}))),
+            }
+        )
+        .reset_index()
+        .sort_values("Job Number / Site", key=lambda s: s.astype(str).str.lower())
+    )
+    summary["Total Fuel Cost"] = summary["Total Fuel Cost"].round(2)
+    return summary
+
+
+def make_fuel_excel(run_summary_df: pd.DataFrame, reconciliation_df: pd.DataFrame) -> bytes:
     output = io.BytesIO()
     export_df = reconciliation_df.copy()
+    if "Raw Line" in export_df.columns and "Transaction Detail" not in export_df.columns:
+        export_df["Transaction Detail"] = export_df["Raw Line"]
     for col in FUEL_EXCEL_COLUMNS:
         if col not in export_df.columns:
             export_df[col] = ""
     export_df = export_df[FUEL_EXCEL_COLUMNS]
-    dfs = {"Summary": summary_df, "Fuel Reconciliation": export_df}
+
+    job_summary_df = make_job_cost_summary(reconciliation_df)
+    dfs = {
+        "Job Summary": job_summary_df,
+        "Transactions": export_df,
+        "Run Summary": run_summary_df,
+    }
     with pd.ExcelWriter(output, engine="openpyxl") as writer:
         for sheet, df in dfs.items():
             df.to_excel(writer, index=False, sheet_name=sheet)
@@ -1225,13 +1261,21 @@ if results is not None:
     st.markdown('<div class="pas-results-title">Results</div>', unsafe_allow_html=True)
     render_results_table(all_df)
 
-    dl_left, dl_mid, dl_right = st.columns([1.3, 1, 1.3])
-    with dl_mid:
+    dl_left, dl_right = st.columns(2)
+    with dl_left:
         st.download_button(
             "⬇  Download annotated PDF",
             data=results["annotated_pdf_bytes"],
             file_name=results["pdf_filename"],
             mime="application/pdf",
+            use_container_width=True,
+        )
+    with dl_right:
+        st.download_button(
+            "⬇  Download Excel output",
+            data=results["excel_bytes"],
+            file_name=results["excel_filename"],
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
         )
 else:

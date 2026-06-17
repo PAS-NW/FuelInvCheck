@@ -1008,10 +1008,13 @@ def style_excel(writer, dfs: Dict[str, pd.DataFrame]):
     body_font = Font(name="Calibri", size=10, color="000000")
     alignment = Alignment(horizontal="center", vertical="center")
     border = Border(left=Side(style="thin", color="D9D9D9"), right=Side(style="thin", color="D9D9D9"), top=Side(style="thin", color="D9D9D9"), bottom=Side(style="thin", color="D9D9D9"))
+    currency_format = '£#,##0.00'
+
     for sheet_name, df in dfs.items():
         ws = writer.book[sheet_name]
         ws.freeze_panes = "A2"
         ws.row_dimensions[1].height = 25
+
         for row in ws.iter_rows():
             for cell in row:
                 cell.font = header_font if cell.row == 1 else body_font
@@ -1019,10 +1022,27 @@ def style_excel(writer, dfs: Dict[str, pd.DataFrame]):
                 cell.border = border
                 if cell.row == 1:
                     cell.fill = yellow
+
+        # Currency formatting:
+        # - Job Summary column B = Total Fuel Cost
+        # - Transactions column G = Fuel Value
+        if sheet_name == "Job Summary":
+            for cell in ws["B"][1:]:
+                cell.number_format = currency_format
+        elif sheet_name == "Transactions":
+            for cell in ws["G"][1:]:
+                cell.number_format = currency_format
+
         ws.auto_filter.ref = ws.dimensions
+
+        # Auto-size columns to fit the output data. Keep a sensible Excel-safe cap
+        # so very long transaction-detail text does not create unusable worksheets.
         for idx, col in enumerate(df.columns, start=1):
-            values = [str(col)] + [str(v) for v in df[col].fillna("").astype(str).tolist()]
-            width = min(max(len(v) for v in values) + 2, 45)
+            max_length = len(str(col))
+            for cell in ws[get_column_letter(idx)]:
+                cell_value = "" if cell.value is None else str(cell.value)
+                max_length = max(max_length, len(cell_value))
+            width = min(max_length + 3, 120)
             ws.column_dimensions[get_column_letter(idx)].width = width
 
 
@@ -1061,6 +1081,10 @@ def make_fuel_excel(run_summary_df: pd.DataFrame, reconciliation_df: pd.DataFram
         if col not in export_df.columns:
             export_df[col] = ""
     export_df = export_df[FUEL_EXCEL_COLUMNS]
+
+    # Keep Fuel Value as a true number in Excel so currency formatting and totals work properly.
+    if "Fuel Value" in export_df.columns:
+        export_df["Fuel Value"] = export_df["Fuel Value"].apply(lambda v: money_to_float(v) if money_to_float(v) is not None else "")
 
     job_summary_df = make_job_cost_summary(reconciliation_df)
     dfs = {

@@ -803,6 +803,42 @@ def read_pdf_pages(uploaded_pdf) -> Tuple[List[str], bytes]:
     return pages, pdf_bytes
 
 
+def extract_invoice_net_total_from_text(pages: List[str]) -> Optional[float]:
+    """Extract the invoice/customer net total from Motia PDF text.
+
+    This is used as a safety check so the app does not create outputs if the
+    transaction extraction total does not match the invoice net total.
+    """
+    combined_text = "\n".join(pages or [])
+
+    customer_total_match = re.search(
+        r"CUSTOMER\s+TOTAL\s*=\s*[0-9,]+(?:\.[0-9]{2})?\s+([0-9,]+(?:\.[0-9]{2}))",
+        combined_text,
+        re.I,
+    )
+    if customer_total_match:
+        return money_to_float(customer_total_match.group(1))
+
+    product_total_match = re.search(
+        r"VAT/PRODUCT\s+SUMMARY.*?TOTAL\s+[0-9,]+(?:\.[0-9]{2})?\s+([0-9,]+(?:\.[0-9]{2}))\s+[0-9,]+(?:\.[0-9]{2})",
+        combined_text,
+        re.I | re.S,
+    )
+    if product_total_match:
+        return money_to_float(product_total_match.group(1))
+
+    return None
+
+
+def extracted_fuel_value_total(reconciliation_df: pd.DataFrame) -> float:
+    if reconciliation_df is None or reconciliation_df.empty or "Fuel Value" not in reconciliation_df.columns:
+        return 0.0
+    return round(
+        pd.to_numeric(reconciliation_df["Fuel Value"], errors="coerce").fillna(0).sum(),
+        2,
+    )
+
+
 def extract_fuel_transactions_from_text(pages: List[str]) -> List[Dict[str, str]]:
     """Extract Motia / Fuel Card Services transaction rows from invoice text.
 
@@ -817,7 +853,7 @@ def extract_fuel_transactions_from_text(pages: List[str]) -> List[Dict[str, str]
     date_token = r"\d{1,2}[-/][A-Za-z]{3}[-/]\d{2,4}\*?|\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\*?"
     time_token = r"\d{1,2}:\d{2}"
     reg_token = r"[A-Z]{1,3}\d{1,3}[A-Z]{0,3}|[A-Z]{2}\d{2}[A-Z]{3}"
-    product_token = r"Diesel|Unleaded(?:\s+Medium(?:\s+Octane)?)?|Petrol|AdBlue"
+    product_token = r"High\s+Perf\s+Diese(?:l)?|Diesel|Unleaded(?:\s+Medium(?:\s+Octane)?)?|Petrol|AdBlue"
 
     for page_no, text in enumerate(pages, start=1):
         lines = [re.sub(r"\s+", " ", line).strip() for line in text.splitlines()]
@@ -1192,6 +1228,16 @@ if run:
             all_df = reconcile_fuel_transactions(transactions, card_lookup)
             if all_df.empty:
                 st.warning("No fuel transactions could be extracted from the PDF.")
+                st.stop()
+
+            invoice_net_total = extract_invoice_net_total_from_text(pages)
+            extracted_net_total = extracted_fuel_value_total(all_df)
+            if invoice_net_total is not None and abs(extracted_net_total - invoice_net_total) > 0.01:
+                st.error(
+                    f"Extraction check failed. Invoice net total is £{invoice_net_total:,.2f}, "
+                    f"but extracted transaction total is £{extracted_net_total:,.2f}. "
+                    "Outputs have not been created because the PDF extraction needs review."
+                )
                 st.stop()
 
         total = len(all_df)

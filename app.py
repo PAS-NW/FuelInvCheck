@@ -937,13 +937,13 @@ def extract_fuel_transactions_from_text(pages: List[str]) -> List[Dict[str, str]
             # Fallback for other fuel-card formats: parse from fixed leading fields,
             # but choose the first long number after time as the card number rather than
             # the last number on the line.
-            m_head = re.match(rf"^(?P<date>{date_token})\s+{time_token}\s+(?P<card>\d{{5,20}})\b", raw, re.I)
+            m_head = re.match(rf"^(?P<date>{date_token})\s+{time_token}\s+(?P<card>\d{{5,20}})\b", parse_line, re.I)
             if m_head:
                 reg = ""
-                reg_match = re.search(rf"\b({reg_token})\b", raw, re.I)
+                reg_match = re.search(rf"\b({reg_token})\b", parse_line, re.I)
                 if reg_match:
                     reg = reg_match.group(1).upper()
-                nums = re.findall(r"\b\d+(?:\.\d+)?\b", raw)
+                nums = re.findall(r"\b\d+(?:\.\d+)?\b", parse_line)
                 qty = nums[-6] if len(nums) >= 6 else (nums[-5] if len(nums) >= 5 else "")
                 net = nums[-4] if len(nums) >= 6 else (nums[-3] if len(nums) >= 3 else "")
                 transactions.append({
@@ -952,7 +952,7 @@ def extract_fuel_transactions_from_text(pages: List[str]) -> List[Dict[str, str]
                     "Vehicle Registration": reg,
                     "Fuel Quantity": qty,
                     "Fuel Value": net,
-                    "Raw Line": raw,
+                    "Raw Line": parse_line,
                     "Page": page_no,
                 })
             i += 1
